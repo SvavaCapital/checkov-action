@@ -28,6 +28,9 @@ inputs:
   use_enforcement_rules:
     description: 'Use the Enforcement rules configured in the platform for hard / soft fail logic. See checkov help text for more details on the nuances of this option.'
     required: false
+  skip_results_upload:
+    description: 'Do not upload scan results to the platform to view in the console. Results are only available locally. If you use the --support flag, logs will still get uploaded.'
+    required: false
   soft_fail:
     description: 'do not return an error code if there are failed checks'
     required: false
@@ -80,7 +83,7 @@ inputs:
     description: 'Path to the Dockerfile of the scanned docker image'
     required: false
   var_file:
-    description: 'Variable files to load in addition to the default files. Currently only supported for source Terraform (.tf file), and Helm chart scans. Requires using --directory, not --file.'
+    description: 'Variable files to load in addition to the default files. Currently only supported for source Terraform (.tf file), and Helm chart scans. Requires using --directory, not --file. (comma separated)'
     required: false
   github_pat:
     description: 'Environment variable name for a Github personal access token for scanning external modules sourced from private repositories'
@@ -112,6 +115,9 @@ inputs:
   policy_metadata_filter:
     description: 'comma separated key:value string to filter policies based on Prisma Cloud policy metadata. See https://prisma.pan.dev/api/cloud/cspm/policy#operation/get-policy-filters-and-options for information on allowed filters. Format: policy.label=test,cloud.type=aws'
     required: false
+  skip_path:
+    description: 'Path (file or directory) to skip, using regular expression logic, relative to the current working directory. Word boundaries are not implicit; i.e., specifying "dir1" will skip any directory or subdirectory named "dir1". Ignored with -f. (comma separated)'
+    required: false
 outputs:
   results:
     description: 'The results from the infrastructure scan'
@@ -121,7 +127,7 @@ branding:
   color: 'purple'
 runs:
   using: 'docker'
-  image: 'docker://ghcr.io/bridgecrewio/checkov:2.3.264'
+  image: 'docker://ghcr.io/bridgecrewio/checkov:2.5.13'
   args:
     - ${{ inputs.file }}
     - ${{ inputs.directory }}
@@ -131,6 +137,7 @@ runs:
     - ${{ inputs.quiet }}
     - ${{ inputs.soft_fail }}
     - ${{ inputs.use_enforcement_rules }}
+    - ${{ inputs.skip_results_upload }}
     - ${{ inputs.framework }}
     - ${{ inputs.external_checks_dirs }}
     - ${{ inputs.external_checks_repos }}
@@ -148,6 +155,7 @@ runs:
     - ${{ inputs.var_file }}
     - ${{ inputs.repo_root_for_plan_enrichment }}
     - ${{ inputs.policy_metadata_filter }}
+    - ${{ inputs.skip_path }}
     - "--user ${{ inputs.container_user }}"
   env:
     API_KEY_VARIABLE: ${{ inputs.api-key }}
